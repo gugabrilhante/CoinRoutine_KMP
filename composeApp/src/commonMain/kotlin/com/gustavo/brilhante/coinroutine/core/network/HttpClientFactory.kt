@@ -28,6 +28,7 @@ object HttpClientFactory{
             }
             install(HttpCache)
             defaultRequest {
+                //TODO add API token
                 headers { append("x-access-token", "") }
                 contentType(ContentType.Application.Json)
             }
