@@ -10,6 +10,8 @@ import com.gustavo.brilhante.coinroutine.coins.presentation.CoinsListViewModel
 import com.gustavo.brilhante.coinroutine.core.database.portifolio.PortfolioDatabase
 import com.gustavo.brilhante.coinroutine.core.database.portifolio.getPortfolioDatabase
 import com.gustavo.brilhante.coinroutine.core.network.HttpClientFactory
+import com.gustavo.brilhante.coinroutine.portfolio.data.PortfolioRepositoryImpl
+import com.gustavo.brilhante.coinroutine.portfolio.domain.PortfolioRepository
 import io.ktor.client.HttpClient
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -40,6 +42,7 @@ val sharedModule = module {
     single {
         getPortfolioDatabase(get<RoomDatabase.Builder<PortfolioDatabase>>())
     }
+    singleOf(::PortfolioRepositoryImpl).bind<PortfolioRepository>()
 
     // coins list
     viewModel { CoinsListViewModel(get(), get()) }
