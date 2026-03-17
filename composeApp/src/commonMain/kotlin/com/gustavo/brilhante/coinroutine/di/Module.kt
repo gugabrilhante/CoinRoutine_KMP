@@ -2,6 +2,7 @@ package com.gustavo.brilhante.coinroutine.di
 
 import com.gustavo.brilhante.coinroutine.coins.data.remote.impl.KtorCoinsRemoteDataSource
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinDetailsUseCase
+import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinPriceHistoryUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinsListUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.api.CoinsRemoteDataSource
 import com.gustavo.brilhante.coinroutine.coins.presentation.CoinsListViewModel
@@ -33,8 +34,9 @@ val sharedModule = module {
     single<HttpClient> { HttpClientFactory.create(get()) }
 
     // coins list
-    viewModel { CoinsListViewModel(get()) }
+    viewModel { CoinsListViewModel(get(), get()) }
     singleOf(::GetCoinsListUseCase)
     singleOf(::KtorCoinsRemoteDataSource).bind<CoinsRemoteDataSource>()
     singleOf(::GetCoinDetailsUseCase)
+    singleOf(::GetCoinPriceHistoryUseCase)
 }
