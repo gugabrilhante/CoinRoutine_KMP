@@ -23,7 +23,7 @@ class SellViewModel(
     private val getCoinDetailsUseCase: GetCoinDetailsUseCase,
     private val portfolioRepository: PortfolioRepository,
     private val sellCoinUseCase: SellCoinUseCase,
-): ViewModel() {
+) : ViewModel() {
 
     private val tempCoinId = "1" // TODO: will be removed
 
@@ -37,12 +37,13 @@ class SellViewModel(
             amount = amount
         )
     }.onStart {
-        when(val portfolioCoinResponse = portfolioRepository.getPortfolioCoin(tempCoinId)) {
+        when (val portfolioCoinResponse = portfolioRepository.getPortfolioCoin(tempCoinId)) {
             is Result.Success -> {
                 portfolioCoinResponse.data?.ownedAmountInUnit?.let {
                     getCoinDetails(it)
                 }
             }
+
             is Result.Error -> {
                 _state.update {
                     it.copy(
@@ -63,7 +64,7 @@ class SellViewModel(
     }
 
     private suspend fun getCoinDetails(ownedAmountInUnit: Double) {
-        when(val coinResponse = getCoinDetailsUseCase.execute(tempCoinId)) {
+        when (val coinResponse = getCoinDetailsUseCase.execute(tempCoinId)) {
             is Result.Success -> {
                 val availableAmountInFiat = ownedAmountInUnit * coinResponse.data.price
                 _state.update {
@@ -79,6 +80,7 @@ class SellViewModel(
                     )
                 }
             }
+
             is Result.Error -> {
                 _state.update {
                     it.copy(
@@ -88,26 +90,27 @@ class SellViewModel(
                 }
             }
         }
+    }
 
-        fun onSellClicked() {
-            val tradeCoin = state.value.coin ?: return
-            viewModelScope.launch {
-                val sellCoinResponse = sellCoinUseCase.sellCoin(
-                    coin = tradeCoin.toCoin(),
-                    amountInFiat = _amount.value.toDouble(),
-                    price = tradeCoin.price
-                )
-                when (sellCoinResponse) {
-                    is Result.Success -> {
-                        // TODO: add event and navigation
-                    }
-                    is Result.Error -> {
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                error = sellCoinResponse.error.toUiText()
-                            )
-                        }
+    fun onSellClicked() {
+        val tradeCoin = state.value.coin ?: return
+        viewModelScope.launch {
+            val sellCoinResponse = sellCoinUseCase.sellCoin(
+                coin = tradeCoin.toCoin(),
+                amountInFiat = _amount.value.toDouble(),
+                price = tradeCoin.price
+            )
+            when (sellCoinResponse) {
+                is Result.Success -> {
+                    // TODO: add event and navigation
+                }
+
+                is Result.Error -> {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = sellCoinResponse.error.toUiText()
+                        )
                     }
                 }
             }
