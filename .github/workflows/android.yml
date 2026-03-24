@@ -21,6 +21,9 @@ jobs:
   build-android:
     name: Build Android (Linux)
     runs-on: ubuntu-latest
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
 
     steps:
       - name: Checkout
@@ -45,9 +48,6 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Build Android (composeApp)
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: ./gradlew :composeApp:assembleDebug
 
       - name: Run Android/CommonMain unit tests
