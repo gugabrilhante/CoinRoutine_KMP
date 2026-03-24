@@ -45,6 +45,8 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Build Android (composeApp)
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
         run: ./gradlew :composeApp:assembleDebug
 
       - name: Run Android/CommonMain unit tests
