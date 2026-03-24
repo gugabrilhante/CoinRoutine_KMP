@@ -2,25 +2,100 @@ name: Android CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_ios:
+        description: "Rodar build iOS?"
+        required: true
+        default: "false"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
-
+  build-android:
+    name: Build Android (Linux)
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: 17
+
+      - name: Grant permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build Android (composeApp)
+        run: ./gradlew :composeApp:assembleDebug
+
+      - name: Run Android/CommonMain unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Run Coverage
+        run: ./gradlew testDebugUnitTest koverHtmlReport
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/reports/kover/html
+
+  build-ios:
+    if: ${{ github.event.inputs.run_ios == 'true' }}
+    name: Build iOS (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Grant permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build iOS (KMP Kotlin/Native)
+        run: ./gradlew :composeApp:compileKotlinIosArm64
+
+      - name: Build iosApp via Xcode
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            build
+
+      - name: Run iOS/CommonMain unit tests
+        run: ./gradlew iosSimulatorArm64Test
