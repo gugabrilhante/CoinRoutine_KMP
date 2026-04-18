@@ -1,4 +1,4 @@
-name: Unit Tests
+name: UI Tests
 
 on:
   push:
@@ -7,14 +7,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
-  unit-tests:
-    name: Unit Tests & Coverage
+  ui-tests:
+    name: Compose UI Tests (Robolectric)
     runs-on: ubuntu-latest
     env:
       API_KEY: ${{ secrets.API_KEY }}
@@ -42,13 +37,5 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest -PskipUiTests
-
-      - name: Generate coverage report
-        run: ./gradlew koverHtmlReport
-
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/reports/kover/html
+      - name: Run UI tests
+        run: ./gradlew testDebugUnitTest -PuiTestsOnly
