@@ -1,0 +1,30 @@
+name: Android UI Tests
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  ui-test:
+    runs-on: macos-latest # Using macOS for better hardware acceleration for the emulator
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Create secrets.properties
+        run: |
+          echo "API_KEY=\"${{ secrets.API_KEY }}\"" > secrets.properties
+          echo "API_BASE_URL=\"${{ secrets.API_BASE_URL }}\"" >> secrets.properties
+
+      - name: Run UI Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest

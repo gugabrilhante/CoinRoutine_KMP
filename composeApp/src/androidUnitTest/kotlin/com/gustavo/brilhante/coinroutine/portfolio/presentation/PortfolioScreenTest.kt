@@ -2,6 +2,7 @@ package com.gustavo.brilhante.coinroutine.portfolio.presentation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -40,6 +41,7 @@ class PortfolioScreenTest {
             }
         }
         composeRule.onNodeWithText("Total Value:").assertIsDisplayed()
+        composeRule.onNodeWithTag("portfolio_value").assertIsDisplayed()
         composeRule.onNodeWithText("$100,000").assertIsDisplayed()
     }
 
@@ -54,6 +56,7 @@ class PortfolioScreenTest {
                 )
             }
         }
+        composeRule.onNodeWithTag("cash_balance").assertIsDisplayed()
         composeRule.onNodeWithText("$10,000").assertIsDisplayed()
     }
 
@@ -144,6 +147,7 @@ class PortfolioScreenTest {
                 )
             }
         }
+        composeRule.onNodeWithTag("buy_coin_button").assertIsDisplayed()
         composeRule.onNodeWithText("Buy Coin").assertIsDisplayed()
     }
 }

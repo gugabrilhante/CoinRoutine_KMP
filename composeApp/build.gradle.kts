@@ -150,6 +150,20 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*.BuildConfig",
+                    "*.*Res",
+                    "*.generated.*"
+                )
+            }
+        }
+    }
+}
+
 dependencies {
     ksp(libs.room.compiler)
     debugImplementation(compose.uiTooling)

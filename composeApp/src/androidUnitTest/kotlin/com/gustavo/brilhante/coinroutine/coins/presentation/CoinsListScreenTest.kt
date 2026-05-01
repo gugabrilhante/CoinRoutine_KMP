@@ -2,8 +2,11 @@ package com.gustavo.brilhante.coinroutine.coins.presentation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gustavo.brilhante.coinroutine.utils.TestTheme
 import org.junit.Rule
@@ -110,5 +113,38 @@ class CoinsListScreenTest {
         }
         composeRule.onNodeWithText("Close").performClick()
         assertTrue(dismissed)
+    }
+
+    @Test
+    fun `long clicking coin triggers onCoinLongPressed with coin id`() {
+        var longPressedId = ""
+        composeRule.setContent {
+            TestTheme {
+                CoinsListContent(
+                    state = CoinsState(coins = listOf(fakeCoin)),
+                    onDismissChart = {},
+                    onCoinLongPressed = { longPressedId = it },
+                    onCoinClicked = {},
+                )
+            }
+        }
+        composeRule.onNodeWithText("Bitcoin").performTouchInput { longClick() }
+        assertEquals("btc-1", longPressedId)
+    }
+
+    @Test
+    fun `chart dialog shows loading indicator when chartState isLoading is true`() {
+        val chartState = UiChartState(isLoading = true, coinName = "Bitcoin", sparkLine = emptyList())
+        composeRule.setContent {
+            TestTheme {
+                CoinsListContent(
+                    state = CoinsState(chartState = chartState),
+                    onDismissChart = {},
+                    onCoinLongPressed = {},
+                    onCoinClicked = {},
+                )
+            }
+        }
+        composeRule.onNodeWithTag("chart_loading").assertIsDisplayed()
     }
 }

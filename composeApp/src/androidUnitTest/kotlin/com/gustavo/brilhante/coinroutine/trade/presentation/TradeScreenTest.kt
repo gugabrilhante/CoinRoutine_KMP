@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import coinroutine.composeapp.generated.resources.Res
 import coinroutine.composeapp.generated.resources.error_insufficient_balance
@@ -146,5 +147,22 @@ class TradeScreenTest {
             }
         }
         composeRule.onNodeWithText("Available: $10,000").assertIsDisplayed()
+    }
+
+    @Test
+    fun `typing amount triggers onAmountChange`() {
+        var amount = ""
+        composeRule.setContent {
+            TestTheme {
+                TradeScreen(
+                    state = TradeState(coin = fakeCoin, availableAmount = "$10,000"),
+                    tradeType = TradeType.BUY,
+                    onAmountChange = { amount = it },
+                    onSubmitClicked = {},
+                )
+            }
+        }
+        composeRule.onNodeWithTag("trade_amount_input").performTextInput("100")
+        assertTrue(amount == "100")
     }
 }

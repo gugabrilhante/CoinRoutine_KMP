@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -90,6 +91,7 @@ fun PortfolioContent(
             onBuyButtonClicked = onDiscoverCoinsClicked
         )
         PortfolioCoinsList(
+            modifier = Modifier.weight(1f),
             coins = state.coins,
             onCoinItemClicked = onCoinItemClicked,
             onDiscoverCoinsClicked = onDiscoverCoinsClicked
@@ -104,57 +106,54 @@ private fun PortfolioBalanceSection(
     showBuyButton: Boolean,
     onBuyButtonClicked: () -> Unit,
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxHeight(0.3f)
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.inversePrimary)
             .padding(32.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = stringResource(Res.string.total_value),
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = MaterialTheme.typography.titleSmall.fontSize,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = portfolioValue,
+            color = MaterialTheme.colorScheme.primary,
+            fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+            modifier = Modifier.testTag("portfolio_value")
+        )
+        Row {
             Text(
-                text = stringResource(Res.string.total_value),
+                text = stringResource(Res.string.cash_balance),
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = portfolioValue,
+                text = cashBalance,
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                modifier = Modifier.testTag("cash_balance")
             )
-            Row {
+        }
+        if (showBuyButton) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onBuyButtonClicked,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = LocalCoinRoutineColorsPalette.current.profitGreen
+                ),
+                contentPadding = PaddingValues(horizontal = 64.dp),
+                modifier = Modifier.testTag("buy_coin_button")
+            ) {
                 Text(
-                    text = stringResource(Res.string.cash_balance),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    text = stringResource(Res.string.buy_coin),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.bodyLarge,
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = cashBalance,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                )
-            }
-            if (showBuyButton) {
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onBuyButtonClicked,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = LocalCoinRoutineColorsPalette.current.profitGreen
-                    ),
-                    contentPadding = PaddingValues(horizontal = 64.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.buy_coin),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
             }
         }
     }
@@ -162,14 +161,14 @@ private fun PortfolioBalanceSection(
 
 @Composable
 private fun PortfolioCoinsList(
+    modifier: Modifier = Modifier,
     coins: List<UiPortfolioCoinItem>,
     onCoinItemClicked: (String) -> Unit,
     onDiscoverCoinsClicked: () -> Unit,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxHeight()
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
             .background(MaterialTheme.colorScheme.background)

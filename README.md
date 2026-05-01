@@ -8,7 +8,10 @@ _A cross-platform cryptocurrency wallet simulation built with Kotlin Multiplatfo
 [![iOS](https://img.shields.io/badge/iOS-supported-000000?logo=apple&logoColor=white)](https://developer.apple.com)
 [![CI Android](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml)
 [![CI iOS](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/ios-ci.yml)
-[![Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/unit-tests.yml)
+[![KMP Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/kmp-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/kmp-tests.yml)
+[![Android Unit Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-unit-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-unit-tests.yml)
+[![Android UI Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ui-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ui-tests.yml)
+[![Codecov](https://codecov.io/gh/gugabrilhante/CoinRoutine/branch/master/graph/badge.svg)](https://codecov.io/gh/gugabrilhante/CoinRoutine)
 
 ---
 
@@ -63,75 +66,30 @@ The project applies **Clean Architecture** across all features. Dependencies alw
         Presentation → Domain ← Data
 ```
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│                   Presentation Layer                     │
-│         ViewModel · UI State · Compose Screens           │
-│                  depends on Domain ↓                     │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-            ┌──────────────▼──────────────┐
-            │         Domain Layer         │
-            │  Use Cases · Repository      │
-            │  Interfaces · Domain Models  │
-            │   (no external dependencies) │
-            └──────────────▲──────────────┘
-                           │
-┌──────────────────────────┴──────────────────────────────┐
-│                      Data Layer                          │
-│  Implements repository interfaces defined in Domain      │
-│  Repository Impl · Remote DataSource · DAO · Mappers     │
-│          Ktor (API)            Room (Local DB)           │
-│                  depends on Domain ↑                     │
-└─────────────────────────────────────────────────────────┘
-```
+---
 
-- **Domain** — the centre; defines contracts (repository interfaces, use cases, models) and depends on nothing
-- **Presentation** — depends on Domain; calls use cases, never touches Data directly
-- **Data** — depends on Domain; implements the repository interfaces and maps Data ↔ Domain models internally
+## 🧪 Quality Engineering & Test Strategy
 
-### Feature module structure
+This project follows a rigorous testing strategy adapted for Kotlin Multiplatform to ensure stability and maintainability.
 
-Each feature (`coins`, `portfolio`, `trade`) follows the same internal layout:
+### 🏛️ Multiplatform Test Pyramid
 
-```text
-coins/
-├── data/
-│   ├── remote/
-│   │   ├── dto/              # API response DTOs
-│   │   └── impl/             # Ktor data source implementation
-│   └── mapper/               # DTO → Domain model mappers
-├── domain/
-│   ├── api/                  # Remote data source interface
-│   ├── model/                # Domain & presentation models
-│   ├── GetCoinListUseCase.kt
-│   ├── GetCoinDetailsUseCase.kt
-│   └── GetCoinPriceHistoryUseCase.kt
-└── presentation/
-    ├── CoinsListViewModel.kt # StateFlow + MVI-like events
-    ├── CoinsState.kt         # Immutable UI state
-    ├── CoinsListScreen.kt    # Composable screen
-    └── component/            # Reusable Composables
-```
+1.  **Shared Module (commonTest)**
+    - **Unit Tests**: Focus on business logic, use cases, and domain models using `kotlin.test`, `Turbine` for Flow testing, and `AssertK`.
+    - Fast, deterministic, and platform-independent.
 
-### KMP Source Sets
+2.  **Android Module (androidUnitTest)**
+    - **UI Tests (Compose)**: Uses Robolectric + Compose UI Test framework to validate UI components without a physical device.
+    - **Integration Tests**: Tests the data layer (Room DAOs and Repositories) using in-memory databases.
 
-```text
-composeApp/src/
-├── commonMain/     # Shared UI, business logic, domain, data
-├── androidMain/    # Android-specific: Activity, DI module, DB builder
-└── iosMain/        # iOS-specific: MainViewController, DI module, DB builder
-```
+3.  **UI Testing (primary)**
+    - Prefer **Compose UI Test** APIs over Espresso for better synchronization and idiomatic Compose testing.
+    - Extensive use of `Modifier.testTag()` for robust element locating.
 
-Platform-specific behaviour is bridged through Kotlin's `expect/actual` mechanism:
+### ⚙️ CI / CD & Coverage
 
-| expect (commonMain) | actual implementations |
-|---|---|
-| `Platform.kt` | `Platform.android.kt` · `Platform.ios.kt` |
-| `AppSecrets.kt` | Reads `secrets.properties` · Reads `Secrets.plist` |
-| `BiometricAuthenticator.kt` | Android BiometricPrompt · iOS LocalAuthentication |
-| `Formatter.kt` | `NumberFormat` (Android) · `NumberFormatter` (iOS) |
-| `platformModule()` | `Module.android.kt` · `Module.ios.kt` |
+- **GitHub Actions**: Modular pipelines for KMP tests, Android Unit tests, and Android UI tests. Pull Requests are automatically validated.
+- **Kover + Codecov**: Automated code coverage reports integrated into the CI pipeline.
 
 ---
 
@@ -159,13 +117,14 @@ CoinRoutine/
 
 ## ⚙️ CI / CD
 
-Three automated pipelines run on every push and pull request to `master`:
+Automated pipelines run on every push and pull request to `master`:
 
 | Pipeline | Trigger | What it does |
 |---|---|---|
 | `android-ci.yml` | push / PR | Assembles Android debug APK |
 | `ios-ci.yml` | push / PR | Compiles Kotlin/Native for iOS · Builds via Xcode · Runs iOS unit tests |
-| `unit-tests.yml` | push / PR | Runs JVM unit tests · Generates Kover HTML coverage report |
+| `kmp-tests.yml` | push / PR | Runs common unit tests · Generates Kover XML coverage report |
+| `android-unit-tests.yml` | push / PR | Runs Android JVM unit tests (including Robolectric UI tests) |
 
 ---
 
