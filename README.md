@@ -3,7 +3,7 @@
 _A cross-platform cryptocurrency wallet simulation built with Kotlin Multiplatform, sharing UI and business logic between Android and iOS._
 
 **Test Coverage**  
-[![Codecov](https://codecov.io/gh/gugabrilhante/CoinRoutine/branch/master/graph/badge.svg)](https://codecov.io/gh/gugabrilhante/CoinRoutine)
+[![Codecov](https://codecov.io/gh/gugabrilhante/CoinRoutine/graph/badge.svg)](https://codecov.io/gh/gugabrilhante/CoinRoutine)
 
 **CI Pipelines**  
 [![CI Android](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml)

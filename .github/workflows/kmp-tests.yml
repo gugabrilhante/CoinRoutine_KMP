@@ -23,14 +23,29 @@ jobs:
           echo "API_KEY=\"${{ secrets.API_KEY }}\"" > secrets.properties
           echo "API_BASE_URL=\"${{ secrets.API_BASE_URL }}\"" >> secrets.properties
 
-      - name: Run KMP tests
-        run: ./gradlew :composeApp:testDebugUnitTest -PskipUiTests
+      - name: Run all tests (unit + Compose UI via Robolectric)
+        run: ./gradlew :composeApp:testDebugUnitTest
 
       - name: Generate Coverage Report
-        run: ./gradlew koverXmlReport
+        run: ./gradlew :composeApp:koverXmlReport
+
+      - name: Validate coverage report exists and is non-empty
+        run: |
+          REPORT=composeApp/build/reports/kover/report.xml
+          if [ ! -f "$REPORT" ]; then
+            echo "ERROR: Kover XML report not found at $REPORT"
+            exit 1
+          fi
+          LINE_COUNT=$(grep -c '<line' "$REPORT" || true)
+          if [ "$LINE_COUNT" -eq 0 ]; then
+            echo "ERROR: Coverage report contains no line coverage data"
+            exit 1
+          fi
+          echo "Coverage report OK — $LINE_COUNT covered lines found"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./composeApp/build/reports/kover/report.xml
+          files: ./composeApp/build/reports/kover/report.xml
+          fail_ci_if_error: true
