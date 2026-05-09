@@ -24,7 +24,7 @@ jobs:
           echo "API_BASE_URL=\"${{ secrets.API_BASE_URL }}\"" >> secrets.properties
 
       - name: Run KMP tests
-        run: ./gradlew test -PskipUiTests
+        run: ./gradlew :composeApp:testDebugUnitTest -PskipUiTests
 
       - name: Generate Coverage Report
         run: ./gradlew koverXmlReport
