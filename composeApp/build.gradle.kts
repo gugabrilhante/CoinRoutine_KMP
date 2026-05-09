@@ -136,6 +136,9 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
             all { testTask ->
+                if (testTask.name.contains("Release", ignoreCase = true)) {
+                    testTask.enabled = false
+                }
                 if (project.hasProperty("skipUiTests")) {
                     testTask.filter { excludeTestsMatching("*ScreenTest") }
                 } else if (project.hasProperty("uiTestsOnly")) {
