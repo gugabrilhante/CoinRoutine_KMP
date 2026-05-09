@@ -80,10 +80,10 @@ class PortfolioEntityMapperTest {
             performancePercent = 25.0,
             averagePurchasePrice = 40000.0,
         )
-        val before = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val fixedTimestamp = 1_700_000_000_000L
 
         // Act
-        val entity = model.toPortfolioCoinEntity()
+        val entity = model.toPortfolioCoinEntity(fixedTimestamp)
 
         // Assert
         assertEquals(coin.id, entity.coinId)
@@ -92,7 +92,7 @@ class PortfolioEntityMapperTest {
         assertEquals(coin.iconUrl, entity.iconUrl)
         assertEquals(model.ownedAmountInUnit, entity.amountOwned)
         assertEquals(model.averagePurchasePrice, entity.averagePurchasePrice)
-        assertTrue(entity.timestamp >= before, "Timestamp should be at or after test start")
+        assertEquals(fixedTimestamp, entity.timestamp)
     }
 }
 

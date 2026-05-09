@@ -9,6 +9,7 @@ import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinPriceHistoryUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinsListUseCase
 import com.gustavo.brilhante.coinroutine.core.domain.DataError
 import com.gustavo.brilhante.coinroutine.core.domain.Result
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -26,25 +27,16 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for [CoinsListViewModel].
- *
- * ViewModels without an injectable dispatcher use [viewModelScope] which runs on
- * [Dispatchers.Main]. To control scheduling, we set [Dispatchers.Main] to a
- * [StandardTestDispatcher] that shares [testScheduler] with [runTest]. This lets
- * [awaitItem] suspend and yield control so that viewModelScope coroutines can
- * advance on the shared scheduler.
- *
- * Each test cancels [viewModelScope] before calling [Dispatchers.resetMain] to prevent
- * active viewModelScope coroutines from attempting to dispatch to the restored Android
- * main dispatcher during runTest cleanup.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CoinsListViewModelTest {
 
     @Test
     fun `coins are loaded and mapped on initialization`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
         val dto = FakeCoinsRemoteDataSource.defaultCoinDto
 
         viewModel.state.test {
@@ -64,9 +56,9 @@ class CoinsListViewModelTest {
 
     @Test
     fun `positive price change sets isPositive to true`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        // defaultCoinDto has change = 2.5 (positive)
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource())
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -82,13 +74,14 @@ class CoinsListViewModelTest {
 
     @Test
     fun `negative price change sets isPositive to false`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinsListResult = Result.Success(
                 CoinsResponseDto(data = CoinsListDto(coins = listOf(FakeCoinsRemoteDataSource.secondCoinDto)))
             )
         }
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -104,11 +97,12 @@ class CoinsListViewModelTest {
 
     @Test
     fun `error state is set and coin list is empty on network failure`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinsListResult = Result.Error(DataError.Remote.NO_INTERNET)
         }
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -125,9 +119,10 @@ class CoinsListViewModelTest {
 
     @Test
     fun `price history loads and chartState is populated on coin long press`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -153,9 +148,10 @@ class CoinsListViewModelTest {
 
     @Test
     fun `price history sparkLine is sorted by timestamp ascending`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -176,9 +172,10 @@ class CoinsListViewModelTest {
 
     @Test
     fun `chartState is null after onDismissChart`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -200,11 +197,12 @@ class CoinsListViewModelTest {
 
     @Test
     fun `chartState has empty sparkLine when price history fetch fails`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             priceHistoryResult = Result.Error(DataError.Remote.SERVER)
         }
-        val viewModel = buildViewModel(dataSource)
+        val viewModel = buildViewModel(dataSource, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -224,8 +222,12 @@ class CoinsListViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun buildViewModel(dataSource: FakeCoinsRemoteDataSource) = CoinsListViewModel(
+    private fun buildViewModel(
+        dataSource: FakeCoinsRemoteDataSource,
+        dispatcher: CoroutineDispatcher,
+    ) = CoinsListViewModel(
         getCoinsListUseCase = GetCoinsListUseCase(dataSource),
         getCoinPriceHistoryUseCase = GetCoinPriceHistoryUseCase(dataSource),
+        coroutineDispatcher = dispatcher,
     )
 }

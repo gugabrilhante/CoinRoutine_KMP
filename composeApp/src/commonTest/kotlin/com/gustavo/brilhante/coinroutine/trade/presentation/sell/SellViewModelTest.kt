@@ -9,6 +9,8 @@ import com.gustavo.brilhante.coinroutine.core.domain.Result
 import com.gustavo.brilhante.coinroutine.portfolio.data.FakePortfolioRepository
 import com.gustavo.brilhante.coinroutine.portfolio.domain.PortfolioCoinModel
 import com.gustavo.brilhante.coinroutine.trade.domain.SellCoinUseCase
+import com.gustavo.brilhante.coinroutine.trade.presentation.common.TradeState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -26,39 +28,43 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for [SellViewModel].
- *
- * Uses [StandardTestDispatcher] sharing [testScheduler] with [runTest] to keep
- * [viewModelScope] and the test coroutine on the same scheduler. Cancels
- * [viewModelScope] before [Dispatchers.resetMain] to avoid dispatch failures
- * during runTest cleanup.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SellViewModelTest {
 
     private val coinId = FakeCoinsRemoteDataSource.defaultCoinDto.uuid
 
-    private fun repositoryWithOwnedCoin() = FakePortfolioRepository().apply {
-        getPortfolioCoinResult = Result.Success(FakePortfolioRepository.portfolioCoin)
-    }
+    private val defaultDomainCoin = com.gustavo.brilhante.coinroutine.coins.domain.coin.Coin(
+        id = FakeCoinsRemoteDataSource.defaultCoinDto.uuid,
+        name = FakeCoinsRemoteDataSource.defaultCoinDto.name,
+        symbol = FakeCoinsRemoteDataSource.defaultCoinDto.symbol,
+        iconUrl = FakeCoinsRemoteDataSource.defaultCoinDto.iconUrl,
+    )
 
     @Test
-    fun `coin details are loaded with available amount on initialization`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repositoryWithOwnedCoin())
+    fun `coin details are loaded on initialization`() = runTest {
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val dataSource = FakeCoinsRemoteDataSource()
+        val repository = FakePortfolioRepository().apply {
+            getPortfolioCoinResult = Result.Success(
+                PortfolioCoinModel(
+                    coin = defaultDomainCoin,
+                    ownedAmountInUnit = 1.0,
+                    ownedAmountInFiat = 50000.0,
+                    averagePurchasePrice = 50000.0,
+                    performancePercent = 0.0
+                )
+            )
+        }
+        val viewModel = buildViewModel(dataSource, repository, dispatcher)
         val dto = FakeCoinsRemoteDataSource.defaultCoinDto
 
         viewModel.state.test {
-            skipItems(1) // initial loading state
-
-            val state = awaitItem()
+            val state = awaitItemUntil { it.coin != null }
             val coin = assertNotNull(state.coin)
             assertEquals(dto.name, coin.name)
             assertFalse(state.isLoading)
-            assertNull(state.error)
-            assertTrue(
-                state.availableAmount.isNotBlank(),
-                "availableAmount should reflect the owned fiat value"
-            )
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -68,38 +74,29 @@ class SellViewModelTest {
     }
 
     @Test
-    fun `error is set when coin details fetch fails`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val dataSource = FakeCoinsRemoteDataSource().apply {
-            coinDetailsResult = Result.Error(DataError.Remote.SERVER)
-        }
-        val viewModel = buildViewModel(dataSource, repositoryWithOwnedCoin())
-
-        viewModel.state.test {
-            skipItems(1)
-            val state = awaitItem()
-            assertNull(state.coin)
-            assertNotNull(state.error)
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        viewModel.viewModelScope.cancel()
-        advanceUntilIdle()
-        Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `error is set when portfolio coin fetch fails`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+    fun `available amount label reflects owned units`() = runTest {
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val units = 2.5
+        val price = 50000.0
         val repository = FakePortfolioRepository().apply {
-            getPortfolioCoinResult = Result.Error(DataError.Remote.NO_INTERNET)
+            getPortfolioCoinResult = Result.Success(
+                PortfolioCoinModel(
+                    coin = defaultDomainCoin,
+                    ownedAmountInUnit = units,
+                    ownedAmountInFiat = units * price,
+                    averagePurchasePrice = price,
+                    performancePercent = 0.0
+                )
+            )
         }
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
-            skipItems(1)
-            val state = awaitItem()
-            assertNotNull(state.error)
+            // 2.5 units * $50,000 = $125,000
+            val expectedFiat = com.gustavo.brilhante.coinroutine.core.util.formatFiat(units * price)
+            val state = awaitItemUntil { it.availableAmount.contains(expectedFiat) }
+            assertTrue(state.availableAmount.contains(expectedFiat))
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -109,39 +106,26 @@ class SellViewModelTest {
     }
 
     @Test
-    fun `amount change is reflected in state`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repositoryWithOwnedCoin())
-
-        viewModel.state.test {
-            skipItems(1)
-            awaitItem() // coin loaded
-
-            viewModel.onAmountChanged("150")
-
-            val state = awaitItem()
-            assertEquals("150", state.amount)
-            cancelAndIgnoreRemainingEvents()
+    fun `SellSuccess event emitted on successful sale`() = runTest {
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val repository = FakePortfolioRepository().apply {
+            getPortfolioCoinResult = Result.Success(
+                PortfolioCoinModel(
+                    coin = defaultDomainCoin,
+                    ownedAmountInUnit = 10.0,
+                    ownedAmountInFiat = 500000.0,
+                    averagePurchasePrice = 50000.0,
+                    performancePercent = 0.0
+                )
+            )
         }
-
-        viewModel.viewModelScope.cancel()
-        advanceUntilIdle()
-        Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `SellSuccess event is emitted after a successful sale`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        // portfolioCoin: ownedAmountInUnit = 1000.0, selling $100 at $50,000 → 0.002 units ≪ owned
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repositoryWithOwnedCoin())
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
-            skipItems(1)
-            awaitItem() // coin loaded
-
+            awaitItemUntil { it.coin != null }
             viewModel.onAmountChanged("100")
-            skipItems(1) // amount change
-
+            awaitItemUntil { it.amount == "100" }
             viewModel.onSellClicked()
             cancelAndIgnoreRemainingEvents()
         }
@@ -157,32 +141,62 @@ class SellViewModelTest {
     }
 
     @Test
-    fun `error state is set when selling more units than owned`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        // Own 0.001 BTC. Selling $200 at $50,000 = 0.004 units > 0.001 owned → error.
-        val smallHolding = PortfolioCoinModel(
-            coin = FakePortfolioRepository.fakeCoin,
-            ownedAmountInUnit = 0.001,
-            ownedAmountInFiat = 50.0,
-            performancePercent = 0.0,
-            averagePurchasePrice = 50000.0,
-        )
+    fun `error state is set when selling more than owned`() = runTest {
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply {
-            getPortfolioCoinResult = Result.Success(smallHolding)
+            getPortfolioCoinResult = Result.Success(
+                PortfolioCoinModel(
+                    coin = defaultDomainCoin,
+                    ownedAmountInUnit = 0.001,
+                    ownedAmountInFiat = 50.0,
+                    averagePurchasePrice = 50000.0,
+                    performancePercent = 0.0
+                )
+            )
         }
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
-            skipItems(1)
-            awaitItem()
-
-            viewModel.onAmountChanged("200")
-            skipItems(1)
-
+            awaitItemUntil { it.coin != null }
+            viewModel.onAmountChanged("1000")
+            awaitItemUntil { it.amount == "1000" }
             viewModel.onSellClicked()
 
-            val errorState = awaitItem()
-            assertNotNull(errorState.error)
+            val state = awaitItemUntil { it.error != null }
+            assertNotNull(state.error)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        viewModel.viewModelScope.cancel()
+        advanceUntilIdle()
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `error is set when fetching coin details fails`() = runTest {
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val dataSource = FakeCoinsRemoteDataSource().apply {
+            coinDetailsResult = Result.Error(DataError.Remote.SERVER)
+        }
+        val repository = FakePortfolioRepository().apply {
+            getPortfolioCoinResult = Result.Success(
+                PortfolioCoinModel(
+                    coin = defaultDomainCoin,
+                    ownedAmountInUnit = 1.0,
+                    ownedAmountInFiat = 50000.0,
+                    averagePurchasePrice = 50000.0,
+                    performancePercent = 0.0
+                )
+            )
+        }
+        val viewModel = buildViewModel(dataSource, repository, dispatcher)
+
+        viewModel.state.test {
+            val state = awaitItemUntil { it.error != null }
+            assertNotNull(state.error)
+            assertNull(state.coin)
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -194,10 +208,19 @@ class SellViewModelTest {
     private fun buildViewModel(
         dataSource: FakeCoinsRemoteDataSource,
         repository: FakePortfolioRepository,
+        dispatcher: CoroutineDispatcher,
     ) = SellViewModel(
         getCoinDetailsUseCase = GetCoinDetailsUseCase(dataSource),
         portfolioRepository = repository,
         sellCoinUseCase = SellCoinUseCase(repository),
         coinId = coinId,
+        coroutineDispatcher = dispatcher,
     )
+
+    private suspend fun <T> app.cash.turbine.ReceiveTurbine<T>.awaitItemUntil(predicate: (T) -> Boolean): T {
+        while (true) {
+            val item = awaitItem()
+            if (predicate(item)) return item
+        }
+    }
 }

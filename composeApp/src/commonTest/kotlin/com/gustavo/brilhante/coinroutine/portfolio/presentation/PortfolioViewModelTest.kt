@@ -25,9 +25,10 @@ class PortfolioViewModelTest {
 
     @Test
     fun `initial state shows empty portfolio with full cash balance`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository()
-        val viewModel = PortfolioViewModel(repository, StandardTestDispatcher(testScheduler))
+        val viewModel = PortfolioViewModel(repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1) // skip initialValue (isLoading=true) emitted before combine runs
@@ -45,9 +46,10 @@ class PortfolioViewModelTest {
 
     @Test
     fun `coin added to portfolio appears in state`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository()
-        val viewModel = PortfolioViewModel(repository, StandardTestDispatcher(testScheduler))
+        val viewModel = PortfolioViewModel(repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1) // skip initialValue
@@ -69,9 +71,10 @@ class PortfolioViewModelTest {
 
     @Test
     fun `total balance increases when a coin is added to the portfolio`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository()
-        val viewModel = PortfolioViewModel(repository, StandardTestDispatcher(testScheduler))
+        val viewModel = PortfolioViewModel(repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1) // skip initialValue
@@ -97,9 +100,10 @@ class PortfolioViewModelTest {
 
     @Test
     fun `showBuyButton is true when portfolio has coins and false when empty`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository()
-        val viewModel = PortfolioViewModel(repository, StandardTestDispatcher(testScheduler))
+        val viewModel = PortfolioViewModel(repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1) // skip initialValue
@@ -119,9 +123,10 @@ class PortfolioViewModelTest {
 
     @Test
     fun `error state is set and loading is false when repository emits an error`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply { simulateError() }
-        val viewModel = PortfolioViewModel(repository, StandardTestDispatcher(testScheduler))
+        val viewModel = PortfolioViewModel(repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1) // skip initialValue

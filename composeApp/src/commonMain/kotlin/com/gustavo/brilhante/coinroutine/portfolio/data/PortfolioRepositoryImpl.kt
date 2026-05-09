@@ -10,6 +10,8 @@ import com.gustavo.brilhante.coinroutine.core.domain.onSuccess
 import com.gustavo.brilhante.coinroutine.portfolio.data.local.PortfolioDao
 import com.gustavo.brilhante.coinroutine.portfolio.data.local.UserBalanceDao
 import com.gustavo.brilhante.coinroutine.portfolio.data.local.UserBalanceEntity
+import com.gustavo.brilhante.coinroutine.core.util.ClockProvider
+import com.gustavo.brilhante.coinroutine.core.util.SystemClockProvider
 import com.gustavo.brilhante.coinroutine.portfolio.data.mapper.toPortfolioCoinEntity
 import com.gustavo.brilhante.coinroutine.portfolio.data.mapper.toPortfolioCoinModel
 import com.gustavo.brilhante.coinroutine.portfolio.domain.PortfolioCoinModel
@@ -25,6 +27,7 @@ class PortfolioRepositoryImpl(
     private val portfolioDao: PortfolioDao,
     private val userBalanceDao: UserBalanceDao,
     private val coinsRemoteDataSource: CoinsRemoteDataSource,
+    private val clockProvider: ClockProvider = SystemClockProvider(),
 ) : PortfolioRepository {
 
     override suspend fun initializeBalance() {
@@ -86,7 +89,7 @@ class PortfolioRepositoryImpl(
 
     override suspend fun savePortfolioCoin(portfolioCoin: PortfolioCoinModel): EmptyResult<DataError.Local> {
         try {
-            portfolioDao.insert(portfolioCoin.toPortfolioCoinEntity())
+            portfolioDao.insert(portfolioCoin.toPortfolioCoinEntity(clockProvider.nowEpochMilliseconds()))
             return Result.Success(Unit)
         } catch (e: SQLiteException) {
             return Result.Error(DataError.Local.DISK_FULL)

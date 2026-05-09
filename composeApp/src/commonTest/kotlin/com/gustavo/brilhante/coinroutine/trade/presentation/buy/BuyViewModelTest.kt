@@ -8,6 +8,7 @@ import com.gustavo.brilhante.coinroutine.core.domain.DataError
 import com.gustavo.brilhante.coinroutine.core.domain.Result
 import com.gustavo.brilhante.coinroutine.portfolio.data.FakePortfolioRepository
 import com.gustavo.brilhante.coinroutine.trade.domain.BuyCoinUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -25,11 +26,6 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for [BuyViewModel].
- *
- * Uses [StandardTestDispatcher] sharing [testScheduler] with [runTest] to keep
- * [viewModelScope] and the test coroutine on the same scheduler. Cancels
- * [viewModelScope] before [Dispatchers.resetMain] to avoid dispatch failures
- * during runTest cleanup.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BuyViewModelTest {
@@ -38,10 +34,11 @@ class BuyViewModelTest {
 
     @Test
     fun `coin details are loaded on initialization`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val repository = FakePortfolioRepository()
-        val viewModel = buildViewModel(dataSource, repository)
+        val viewModel = buildViewModel(dataSource, repository, dispatcher)
         val dto = FakeCoinsRemoteDataSource.defaultCoinDto
 
         viewModel.state.test {
@@ -64,9 +61,10 @@ class BuyViewModelTest {
 
     @Test
     fun `available amount label reflects the current cash balance`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply { setCashBalance(5000.0) }
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -85,11 +83,12 @@ class BuyViewModelTest {
 
     @Test
     fun `error is set and coin is null when coin details fetch fails`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinDetailsResult = Result.Error(DataError.Remote.NO_INTERNET)
         }
-        val viewModel = buildViewModel(dataSource, FakePortfolioRepository())
+        val viewModel = buildViewModel(dataSource, FakePortfolioRepository(), dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -106,8 +105,9 @@ class BuyViewModelTest {
 
     @Test
     fun `amount change is reflected in state`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), FakePortfolioRepository())
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), FakePortfolioRepository(), dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -127,11 +127,12 @@ class BuyViewModelTest {
 
     @Test
     fun `BuySuccess event is emitted after a successful purchase`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply {
             getPortfolioCoinResult = Result.Success(null)
         }
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -156,12 +157,13 @@ class BuyViewModelTest {
 
     @Test
     fun `error state is set when purchase fails due to insufficient funds`() = runTest {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
+        Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply {
             setCashBalance(0.01) // too little to buy anything
             getPortfolioCoinResult = Result.Success(null)
         }
-        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository)
+        val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
 
         viewModel.state.test {
             skipItems(1)
@@ -185,10 +187,12 @@ class BuyViewModelTest {
     private fun buildViewModel(
         dataSource: FakeCoinsRemoteDataSource,
         repository: FakePortfolioRepository,
+        dispatcher: CoroutineDispatcher,
     ) = BuyViewModel(
         getCoinDetailsUseCase = GetCoinDetailsUseCase(dataSource),
         portfolioRepository = repository,
         buyCoinUseCase = BuyCoinUseCase(repository),
         coinId = coinId,
+        coroutineDispatcher = dispatcher,
     )
 }

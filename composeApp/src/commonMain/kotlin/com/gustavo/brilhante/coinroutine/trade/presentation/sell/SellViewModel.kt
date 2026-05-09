@@ -11,10 +11,13 @@ import com.gustavo.brilhante.coinroutine.trade.domain.SellCoinUseCase
 import com.gustavo.brilhante.coinroutine.trade.presentation.common.TradeState
 import com.gustavo.brilhante.coinroutine.trade.presentation.common.UiTradeCoinItem
 import com.gustavo.brilhante.coinroutine.trade.presentation.mapper.toCoin
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -26,6 +29,7 @@ class SellViewModel(
     private val portfolioRepository: PortfolioRepository,
     private val sellCoinUseCase: SellCoinUseCase,
     private val coinId: String,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     private val _amount = MutableStateFlow("")
@@ -54,7 +58,7 @@ class SellViewModel(
                 }
             }
         }
-    }.stateIn(
+    }.flowOn(coroutineDispatcher).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = TradeState(isLoading = true)
@@ -99,7 +103,7 @@ class SellViewModel(
 
     fun onSellClicked() {
         val tradeCoin = state.value.coin ?: return
-        viewModelScope.launch {
+        viewModelScope.launch(coroutineDispatcher) {
             val sellCoinResponse = sellCoinUseCase.sellCoin(
                 coin = tradeCoin.toCoin(),
                 amountInFiat = _amount.value.toDouble(),

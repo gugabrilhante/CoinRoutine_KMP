@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} basename {})",
+      "Bash(./gradlew testDebugUnitTest -PuiTestsOnly --no-daemon)",
+      "Bash(xargs cat *)"
+    ]
+  }
+}
