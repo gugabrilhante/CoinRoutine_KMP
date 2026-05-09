@@ -27,23 +27,13 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for [CoinsListViewModel].
- *
- * ViewModels without an injectable dispatcher use [viewModelScope] which runs on
- * [Dispatchers.Main]. To control scheduling, we set [Dispatchers.Main] to a
- * [StandardTestDispatcher] that shares [testScheduler] with [runTest]. This lets
- * [awaitItem] suspend and yield control so that viewModelScope coroutines can
- * advance on the shared scheduler.
- *
- * Each test cancels [viewModelScope] before calling [Dispatchers.resetMain] to prevent
- * active viewModelScope coroutines from attempting to dispatch to the restored Android
- * main dispatcher during runTest cleanup.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CoinsListViewModelTest {
 
     @Test
     fun `coins are loaded and mapped on initialization`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val viewModel = buildViewModel(dataSource, dispatcher)
@@ -66,9 +56,8 @@ class CoinsListViewModelTest {
 
     @Test
     fun `positive price change sets isPositive to true`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
-        // defaultCoinDto has change = 2.5 (positive)
         val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), dispatcher)
 
         viewModel.state.test {
@@ -85,7 +74,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `negative price change sets isPositive to false`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinsListResult = Result.Success(
@@ -108,7 +97,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `error state is set and coin list is empty on network failure`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinsListResult = Result.Error(DataError.Remote.NO_INTERNET)
@@ -130,7 +119,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `price history loads and chartState is populated on coin long press`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val viewModel = buildViewModel(dataSource, dispatcher)
@@ -159,7 +148,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `price history sparkLine is sorted by timestamp ascending`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val viewModel = buildViewModel(dataSource, dispatcher)
@@ -183,7 +172,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `chartState is null after onDismissChart`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val viewModel = buildViewModel(dataSource, dispatcher)
@@ -208,7 +197,7 @@ class CoinsListViewModelTest {
 
     @Test
     fun `chartState has empty sparkLine when price history fetch fails`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             priceHistoryResult = Result.Error(DataError.Remote.SERVER)

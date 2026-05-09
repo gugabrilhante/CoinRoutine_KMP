@@ -26,11 +26,6 @@ import kotlin.test.assertTrue
 
 /**
  * Tests for [BuyViewModel].
- *p
- * Uses [StandardTestDispatcher] sharing [testScheduler] with [runTest] to keep
- * [viewModelScope] and the test coroutine on the same scheduler. Cancels
- * [viewModelScope] before [Dispatchers.resetMain] to avoid dispatch failures
- * during runTest cleanup.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BuyViewModelTest {
@@ -39,7 +34,7 @@ class BuyViewModelTest {
 
     @Test
     fun `coin details are loaded on initialization`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource()
         val repository = FakePortfolioRepository()
@@ -66,7 +61,7 @@ class BuyViewModelTest {
 
     @Test
     fun `available amount label reflects the current cash balance`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply { setCashBalance(5000.0) }
         val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), repository, dispatcher)
@@ -88,7 +83,7 @@ class BuyViewModelTest {
 
     @Test
     fun `error is set and coin is null when coin details fetch fails`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val dataSource = FakeCoinsRemoteDataSource().apply {
             coinDetailsResult = Result.Error(DataError.Remote.NO_INTERNET)
@@ -110,7 +105,7 @@ class BuyViewModelTest {
 
     @Test
     fun `amount change is reflected in state`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val viewModel = buildViewModel(FakeCoinsRemoteDataSource(), FakePortfolioRepository(), dispatcher)
 
@@ -132,7 +127,7 @@ class BuyViewModelTest {
 
     @Test
     fun `BuySuccess event is emitted after a successful purchase`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply {
             getPortfolioCoinResult = Result.Success(null)
@@ -162,7 +157,7 @@ class BuyViewModelTest {
 
     @Test
     fun `error state is set when purchase fails due to insufficient funds`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
+        val dispatcher = StandardTestDispatcher(this.testScheduler)
         Dispatchers.setMain(dispatcher)
         val repository = FakePortfolioRepository().apply {
             setCashBalance(0.01) // too little to buy anything
