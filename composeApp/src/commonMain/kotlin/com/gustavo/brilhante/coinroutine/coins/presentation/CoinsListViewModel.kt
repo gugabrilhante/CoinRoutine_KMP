@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinPriceHistoryUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinsListUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -18,13 +21,16 @@ import kotlinx.coroutines.launch
 class CoinsListViewModel(
     private val getCoinsListUseCase: GetCoinsListUseCase,
     private val getCoinPriceHistoryUseCase: GetCoinPriceHistoryUseCase,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CoinsState())
     val state = _state
         .onStart {
             getAllCoins()
-        }.stateIn(
+        }
+        .flowOn(coroutineDispatcher)
+        .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = CoinsState()
@@ -71,7 +77,7 @@ class CoinsListViewModel(
             )
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(coroutineDispatcher) {
             when(val priceHistory = getCoinPriceHistoryUseCase.execute(coinId)) {
                 is Result.Success -> {
                     _state.update { currentState ->

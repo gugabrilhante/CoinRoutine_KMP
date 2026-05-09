@@ -190,5 +190,6 @@ class BuyViewModelTest {
         portfolioRepository = repository,
         buyCoinUseCase = BuyCoinUseCase(repository),
         coinId = coinId,
+        coroutineDispatcher = StandardTestDispatcher(testScheduler),
     )
 }

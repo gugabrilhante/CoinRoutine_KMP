@@ -3,7 +3,6 @@ package com.gustavo.brilhante.coinroutine.portfolio.data.mapper
 import com.gustavo.brilhante.coinroutine.coins.domain.coin.Coin
 import com.gustavo.brilhante.coinroutine.portfolio.data.local.PortfolioCoinEntity
 import com.gustavo.brilhante.coinroutine.portfolio.domain.PortfolioCoinModel
-import kotlin.time.Clock
 
 fun PortfolioCoinEntity.toPortfolioCoinModel(
     currentPrice: Double,
@@ -22,7 +21,7 @@ fun PortfolioCoinEntity.toPortfolioCoinModel(
     )
 }
 
-fun PortfolioCoinModel.toPortfolioCoinEntity(): PortfolioCoinEntity {
+fun PortfolioCoinModel.toPortfolioCoinEntity(timestamp: Long): PortfolioCoinEntity {
     return PortfolioCoinEntity(
         coinId = coin.id,
         name = coin.name,
@@ -30,6 +29,6 @@ fun PortfolioCoinModel.toPortfolioCoinEntity(): PortfolioCoinEntity {
         iconUrl = coin.iconUrl,
         amountOwned = ownedAmountInUnit,
         averagePurchasePrice = averagePurchasePrice,
-        timestamp = Clock.System.now().toEpochMilliseconds()
+        timestamp = timestamp
     )
 }

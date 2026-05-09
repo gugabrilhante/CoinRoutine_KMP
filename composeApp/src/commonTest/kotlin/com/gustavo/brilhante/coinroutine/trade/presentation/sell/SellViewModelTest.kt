@@ -199,5 +199,6 @@ class SellViewModelTest {
         portfolioRepository = repository,
         sellCoinUseCase = SellCoinUseCase(repository),
         coinId = coinId,
+        coroutineDispatcher = StandardTestDispatcher(testScheduler),
     )
 }

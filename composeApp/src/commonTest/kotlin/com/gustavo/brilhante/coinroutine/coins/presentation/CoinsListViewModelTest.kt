@@ -227,5 +227,6 @@ class CoinsListViewModelTest {
     private fun buildViewModel(dataSource: FakeCoinsRemoteDataSource) = CoinsListViewModel(
         getCoinsListUseCase = GetCoinsListUseCase(dataSource),
         getCoinPriceHistoryUseCase = GetCoinPriceHistoryUseCase(dataSource),
+        coroutineDispatcher = StandardTestDispatcher(testScheduler),
     )
 }

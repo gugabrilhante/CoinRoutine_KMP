@@ -2,6 +2,8 @@ package com.gustavo.brilhante.coinroutine.di
 
 import androidx.room.RoomDatabase
 import com.gustavo.brilhante.coinroutine.coins.data.remote.impl.KtorCoinsRemoteDataSource
+import com.gustavo.brilhante.coinroutine.core.util.ClockProvider
+import com.gustavo.brilhante.coinroutine.core.util.SystemClockProvider
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinDetailsUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinPriceHistoryUseCase
 import com.gustavo.brilhante.coinroutine.coins.domain.GetCoinsListUseCase
@@ -47,6 +49,7 @@ val sharedModule = module {
     single {
         getPortfolioDatabase(get<RoomDatabase.Builder<PortfolioDatabase>>())
     }
+    single<ClockProvider> { SystemClockProvider() }
     singleOf(::PortfolioRepositoryImpl).bind<PortfolioRepository>()
     single { get<PortfolioDatabase>().portfolioDao() }
     single { get<PortfolioDatabase>().userBalanceDao() }
