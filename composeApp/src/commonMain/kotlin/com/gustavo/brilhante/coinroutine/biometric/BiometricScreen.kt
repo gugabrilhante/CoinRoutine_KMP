@@ -40,6 +40,20 @@ fun BiometricScreen(
 ) {
     val platformContext = getPlatformContext()
     val biometricAuthenticator = remember { getBiometricAuthenticator(platformContext) }
+    
+    BiometricContent(
+        onAuthenticate = {
+            biometricAuthenticator.authenticate()
+        },
+        onSuccess = onSuccess
+    )
+}
+
+@Composable
+fun BiometricContent(
+    onAuthenticate: suspend () -> Boolean,
+    onSuccess: () -> Unit,
+) {
     val coroutineScope = rememberCoroutineScope()
     var authError by remember { mutableStateOf<String?>(null) }
 
@@ -89,7 +103,7 @@ fun BiometricScreen(
                 onClick = {
                     coroutineScope.launch {
                         try {
-                            val authenticated = biometricAuthenticator.authenticate()
+                            val authenticated = onAuthenticate()
                             authError = null
                             if (authenticated) {
                                 onSuccess()

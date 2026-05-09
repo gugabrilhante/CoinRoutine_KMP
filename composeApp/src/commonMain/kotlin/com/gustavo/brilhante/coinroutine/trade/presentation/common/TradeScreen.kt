@@ -170,7 +170,8 @@ fun CenteredDollarTextField(
         },
         modifier = modifier
             .focusRequester(focusRequester)
-            .padding(16.dp),
+            .padding(16.dp)
+            .testTag("trade_amount_input"),
         textStyle = TextStyle(
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 24.sp,
