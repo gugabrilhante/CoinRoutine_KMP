@@ -6,9 +6,16 @@ on:
 
 jobs:
   ui-test:
-    runs-on: macos-latest # Using macOS for better hardware acceleration for the emulator
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -26,5 +33,8 @@ jobs:
         with:
           api-level: 31
           target: google_apis
-          arch: arm64-v8a
+          arch: x86_64
+          cores: 2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
           script: ./gradlew connectedDebugAndroidTest
