@@ -5,7 +5,8 @@ on:
     branches: [master]
 
 jobs:
-  ui-test:
+  android-ui-tests:
+    name: Android UI Tests (Robolectric)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

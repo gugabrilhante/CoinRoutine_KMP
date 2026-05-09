@@ -7,7 +7,8 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  kmp-tests-and-coverage:
+    name: KMP Tests & Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,23 +30,29 @@ jobs:
       - name: Generate Coverage Report
         run: ./gradlew :composeApp:koverXmlReportDebug
 
-      - name: Validate coverage report exists and is non-empty
+      - name: Locate and validate Kover XML report
         run: |
-          REPORT=composeApp/build/reports/kover/debugReport.xml
-          if [ ! -f "$REPORT" ]; then
-            echo "ERROR: Kover XML report not found at $REPORT"
+          echo "=== Kover report files generated ==="
+          find composeApp/build/reports/kover -type f 2>/dev/null | sort || echo "(directory empty or missing)"
+
+          REPORT=$(find composeApp/build/reports/kover -name "*.xml" -type f | head -1)
+          if [ -z "$REPORT" ]; then
+            echo "ERROR: No XML report found under composeApp/build/reports/kover"
             exit 1
           fi
+
           LINE_COUNT=$(grep -c '<line' "$REPORT" || true)
           if [ "$LINE_COUNT" -eq 0 ]; then
-            echo "ERROR: Coverage report contains no line coverage data"
+            echo "ERROR: Report has no line coverage data: $REPORT"
             exit 1
           fi
-          echo "Coverage report OK — $LINE_COUNT covered lines found"
+
+          echo "Coverage report OK: $REPORT ($LINE_COUNT lines)"
+          echo "KOVER_REPORT=$REPORT" >> "$GITHUB_ENV"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./composeApp/build/reports/kover/debugReport.xml
+          files: ${{ env.KOVER_REPORT }}
           fail_ci_if_error: true
