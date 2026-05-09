@@ -39,7 +39,6 @@ _A cross-platform cryptocurrency wallet simulation built with Kotlin Multiplatfo
 - 🔌 **Ktor 3** — async REST API integration fetching live cryptocurrency data
 - 💾 **Room 2.8 + SQLite Bundled** — local persistence shared across platforms
 - 💉 **Koin 4** — compile-safe dependency injection with multiplatform modules
-- 🔐 **Biometric Authentication** — fingerprint/Face ID via `expect/actual` for Android and iOS
 - 🧪 **Automated Testing** — unit and UI tests with Kotlin Test, Turbine, and AssertK
 - ⚙️ **CI/CD with GitHub Actions** — automated Android build, iOS build, unit tests, and Kover coverage reports
 
