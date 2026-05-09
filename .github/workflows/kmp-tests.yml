@@ -27,11 +27,11 @@ jobs:
         run: ./gradlew :composeApp:testDebugUnitTest
 
       - name: Generate Coverage Report
-        run: ./gradlew :composeApp:koverXmlReport
+        run: ./gradlew :composeApp:koverXmlReportDebug
 
       - name: Validate coverage report exists and is non-empty
         run: |
-          REPORT=composeApp/build/reports/kover/report.xml
+          REPORT=composeApp/build/reports/kover/debugReport.xml
           if [ ! -f "$REPORT" ]; then
             echo "ERROR: Kover XML report not found at $REPORT"
             exit 1
@@ -47,5 +47,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./composeApp/build/reports/kover/report.xml
+          files: ./composeApp/build/reports/kover/debugReport.xml
           fail_ci_if_error: true
