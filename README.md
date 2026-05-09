@@ -2,17 +2,20 @@
 
 _A cross-platform cryptocurrency wallet simulation built with Kotlin Multiplatform, sharing UI and business logic between Android and iOS._
 
+**Stack**  
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.10.3-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 [![Android](https://img.shields.io/badge/Android-minSdk%2024%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
 [![iOS](https://img.shields.io/badge/iOS-supported-000000?logo=apple&logoColor=white)](https://developer.apple.com)
 
+**CI Pipelines**  
 [![CI Android](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ci.yml)
 [![CI iOS](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/ios-ci.yml)
 [![KMP Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/kmp-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/kmp-tests.yml)
 [![Android Unit Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-unit-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-unit-tests.yml)
 [![Android UI Tests](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ui-tests.yml/badge.svg)](https://github.com/gugabrilhante/CoinRoutine/actions/workflows/android-ui-tests.yml)
 
+**Test Coverage**  
 [![Codecov](https://codecov.io/gh/gugabrilhante/CoinRoutine/branch/master/graph/badge.svg)](https://codecov.io/gh/gugabrilhante/CoinRoutine)
 
 ---
