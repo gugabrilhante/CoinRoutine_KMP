@@ -41,7 +41,6 @@ kotlin {
             implementation(libs.ktor.android)
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
-            implementation(libs.biometric)
         }
         commonMain.dependencies {
             implementation(compose.runtime)

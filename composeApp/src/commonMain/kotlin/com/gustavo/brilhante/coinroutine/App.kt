@@ -7,9 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.gustavo.brilhante.coinroutine.biometric.BiometricScreen
 import com.gustavo.brilhante.coinroutine.coins.presentation.CoinsListScreen
-import com.gustavo.brilhante.coinroutine.core.navigation.Biometric
 import com.gustavo.brilhante.coinroutine.core.navigation.Buy
 import com.gustavo.brilhante.coinroutine.core.navigation.Coins
 import com.gustavo.brilhante.coinroutine.core.navigation.Portfolio
@@ -30,11 +28,6 @@ fun App() {
             modifier = Modifier.fillMaxSize(),
             startDestination = Portfolio
         ){
-            composable<Biometric>() {
-                BiometricScreen {
-                    navController.navigate(Portfolio)
-                }
-            }
             composable<Portfolio> {
                 PortfolioScreen(
                     onCoinItemClicked = { coinId ->
